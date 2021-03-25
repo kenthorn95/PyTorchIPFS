@@ -21,15 +21,14 @@ class IPFSDatasetBase(Dataset, ABC):
 
         self._ipfs_client = ipfs_client
         self._data_folder = pathlib.Path(data_folder)
-        self.download_policy = download_policy
-        self.error_policy = error_policy
 
-        self._init_data()
+        self._download_policy = download_policy
+        self._error_policy = error_policy
 
-        if download_policy == 'eager':
-            self.download_data()
+        if not self._data_folder.exists():
+            self._data_folder.mkdir()
 
-    def _init_data(self):
+    def init_data(self):
         raise NotImplementedError()
 
     def _download_item(self, index):
@@ -55,21 +54,23 @@ class IPFSDatasetBase(Dataset, ABC):
 class IPFSGeneralDataset(IPFSDatasetBase):
     def __init__(self, ipfs_client, data_folder, hashes, parser=None, download_policy='eager', error_policy='ignore'):
         super().__init__(ipfs_client, data_folder, hashes, download_policy=download_policy, error_policy=error_policy)
-        self.parser = parser
+        self._parser = parser
 
     def _init_data(self):
         self._data = [None] * len(self._hashes)
+        if self._download_policy == 'eager':
+            self.download_data()
 
     def _download_item(self, index):
         element_hash = self._hashes[index]
         element_path = self._data_folder / str(element_hash)
 
         if not element_path.exists():
-            self._ipfs_client.get(element_hash)
+            self._ipfs_client.get(element_hash, target=self._data_folder)
 
-        with open(element_path, 'r') as f:
+        with open(element_path, 'rb') as f:
             file_contents = f.read()
-        self._data[index] = file_contents if self.parser is None else self.parser(file_contents)
+        self._data[index] = file_contents if self._parser is None else self._parser(file_contents)
 
 
 class IPFSTensorDataset(IPFSGeneralDataset):
