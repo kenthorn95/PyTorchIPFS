@@ -4,7 +4,7 @@ Parsers to convert IPFS data to more usable formats.
 
 from abc import ABC, abstractmethod
 import io
-from typing import Any, Iterable, Union
+from typing import Iterable, Union
 
 from PIL import Image
 import numpy as np

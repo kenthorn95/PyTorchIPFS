@@ -165,11 +165,15 @@ class IPFSGeneralDataset(IPFSDatasetBase):
         element_hash = self._hashes[index]
         element_path = self._data_folder / str(element_hash)
 
-        if not element_path.exists():
-            self._ipfs_client.get(element_hash, target=self._data_folder)
+        if self._data_folder is None:
+            # TODO: Download to memory
+            raise NotImplementedError
+        else:
+            if not element_path.exists():
+                self._ipfs_client.get(element_hash, target=self._data_folder)
 
-        with open(element_path, 'rb') as f:
-            file_contents = f.read()
+            with open(element_path, 'rb') as f:
+                file_contents = f.read()
         self._data[index] = file_contents if self._parser is None else self._parser(file_contents)
 
 

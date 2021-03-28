@@ -88,14 +88,25 @@ class CheckpointBackup:
         Initializes CheckpointBackup.
 
         Args:
-            ipfs_client (ipfshttpclient.Client): [description]
-            verbose (bool, optional): [description]. Defaults to True.
+            ipfs_client (ipfshttpclient.Client): The client that will be used to
+                manage checkpoints.
+            verbose (bool, optional): If True, logs checkpoint storage at INFO level.
+                Defaults to True.
         """
         self._ipfs_client = ipfs_client
         self._verbose = verbose
         self.checkpoint_hashes = []
 
-    def store_checkpoint(self, checkpoint):
+    def store_checkpoint(self, checkpoint : dict):
+        """
+        Stores a checkpoint on IPFS.
+
+        Args:
+            checkpoint (dict): The checkpoint to be stored.
+
+        Returns:
+            str: The hash of the stored checkpoint.
+        """
         checkpoint_hash = store_checkpoint(self._ipfs_client, checkpoint)
         if self._verbose:
             logger.info('Storing checkpoint as %s.', checkpoint_hash)
@@ -103,7 +114,16 @@ class CheckpointBackup:
 
         return checkpoint_hash
 
-    def get_checkpoint(self, checkpoint_hash):
+    def get_checkpoint(self, checkpoint_hash : str):
+        """
+        Retrieves a checkpoint from IPFS.
+
+        Args:
+            checkpoint_hash (str): Hash of the checkpoint.
+
+        Returns:
+            dict: The retrieved checkpoint.
+        """
         return get_checkpoint(self._ipfs_client, checkpoint_hash)
 
     @property
