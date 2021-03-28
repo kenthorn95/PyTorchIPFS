@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import io
 from PIL import Image
-from typing import Union
+from typing import Any, Iterable, Union
 
 import numpy as np
 import torch
@@ -11,15 +11,27 @@ class IPFSParserBase(ABC):
     def __call__(self, data : bytes):
         raise NotImplementedError
 
+class SequentialParser(IPFSParserBase):
+    def __init__(self,
+                parsers : Iterable[IPFSParserBase]):
+        self._parsers = list(parsers)
+
+    @abstractmethod
+    def __call__(self, data : bytes):
+        for parser in self._parsers:
+            data = parser(data)
+        
+        return data
+
 class IPFSImageParser(IPFSParserBase):
     def __call__(self, data : bytes):
         return Image.open(io.BytesIO(data))
 
 class IPFSImageTensorParser(IPFSImageParser):
     def __init__(self,
-    channel_first : bool = True,
-    dtype : torch.dtype = torch.float32,
-    device : Union[torch.device, str] = 'cpu'):
+                channel_first : bool = True,
+                dtype : torch.dtype = torch.float32,
+                device : Union[torch.device, str] = 'cpu'):
         self._channel_first = channel_first
         self._dtype = dtype
         self._device = device
