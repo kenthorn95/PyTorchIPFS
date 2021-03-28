@@ -1,5 +1,5 @@
 """
-Provides parsers to convert IPFS data to more usable formats.
+Parsers to convert IPFS data to more usable formats.
 """
 
 from abc import ABC, abstractmethod

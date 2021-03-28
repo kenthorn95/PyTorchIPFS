@@ -1,10 +1,13 @@
+"""
+Tools and utilities to store and load checkpoints
+on IPFS.
+"""
+
 import io
 import logging
 from typing import Any
 
-import dataset
 import ipfshttpclient
-
 import torch
 
 logger = logging.getLogger(__name__)
