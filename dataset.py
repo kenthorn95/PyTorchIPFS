@@ -1,4 +1,6 @@
-
+"""
+Torch datasets to handle IPFS data.
+"""
 
 from abc import ABC, abstractmethod
 import pathlib
