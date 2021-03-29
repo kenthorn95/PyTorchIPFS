@@ -15,7 +15,8 @@ from .utils import _download_item
 
 logger = logging.getLogger(__name__)
 
-def _serialize(data : Any):
+
+def _serialize(data: Any):
     """
     Serializes to bytes using PyTorch's
     serialization tools.
@@ -31,7 +32,8 @@ def _serialize(data : Any):
     buff.seek(0)
     return buff.read()
 
-def _deserialize(serialized : bytes):
+
+def _deserialize(serialized: bytes):
     """
     Deserializes from bytes using PyTorch's
     serialization tools.
@@ -47,7 +49,8 @@ def _deserialize(serialized : bytes):
     buff.seek(0)
     return torch.load(buff)
 
-def store_checkpoint(ipfs_client : ipfshttpclient.Client, checkpoint : dict):
+
+def store_checkpoint(ipfs_client: ipfshttpclient.Client, checkpoint: dict):
     """
     Stores a checkpoint on IPFS.
 
@@ -64,7 +67,8 @@ def store_checkpoint(ipfs_client : ipfshttpclient.Client, checkpoint : dict):
     checkpoint_hash = ipfs_client.add_bytes(serialized)
     return checkpoint_hash
 
-def get_checkpoint(ipfs_client : ipfshttpclient.Client, checkpoint_hash : str, data_folder : Union[str, pathlib.Path]):
+
+def get_checkpoint(ipfs_client: ipfshttpclient.Client, checkpoint_hash: str, data_folder: Union[str, pathlib.Path]):
     """
     Retrieves a checkpoint from IPFS.
 
@@ -82,14 +86,16 @@ def get_checkpoint(ipfs_client : ipfshttpclient.Client, checkpoint_hash : str, d
 
     return _deserialize(serialized)
 
+
 class CheckpointBackup:
     """
     Backups checkpoints on IPFS.
     """
+
     def __init__(self,
-                ipfs_client : ipfshttpclient.Client,
-                data_folder : Union[str, pathlib.Path],
-                verbose : bool = True):
+                 ipfs_client: ipfshttpclient.Client,
+                 data_folder: Union[str, pathlib.Path],
+                 verbose: bool = True):
         """
         Initializes CheckpointBackup.
 
@@ -106,7 +112,7 @@ class CheckpointBackup:
         self._verbose = verbose
         self.checkpoint_hashes = []
 
-    def store_checkpoint(self, checkpoint : dict):
+    def store_checkpoint(self, checkpoint: dict):
         """
         Stores a checkpoint on IPFS.
 
@@ -123,7 +129,7 @@ class CheckpointBackup:
 
         return checkpoint_hash
 
-    def get_checkpoint(self, checkpoint_hash : str):
+    def get_checkpoint(self, checkpoint_hash: str):
         """
         Retrieves a checkpoint from IPFS.
 

@@ -10,12 +10,13 @@ from PIL import Image
 import numpy as np
 import torch
 
+
 class IPFSParserBase(ABC):
     """
     Base class for IPFS parsers.
     """
     @abstractmethod
-    def __call__(self, data : bytes):
+    def __call__(self, data: bytes):
         """
         Parses IPFS data.
 
@@ -23,12 +24,14 @@ class IPFSParserBase(ABC):
             data (bytes): The IPFS data.
         """
 
+
 class SequentialParser(IPFSParserBase):
     """
     Chains multiple parsers in sequence.
     """
+
     def __init__(self,
-                parsers : Iterable[IPFSParserBase]):
+                 parsers: Iterable[IPFSParserBase]):
         """
         Initializes SequentialParser.
 
@@ -38,7 +41,7 @@ class SequentialParser(IPFSParserBase):
         """
         self._parsers = list(parsers)
 
-    def __call__(self, data : bytes):
+    def __call__(self, data: bytes):
         """
         Parses IPFS data.
 
@@ -50,11 +53,13 @@ class SequentialParser(IPFSParserBase):
 
         return data
 
+
 class IPFSImageParser(IPFSParserBase):
     """
     Parses IPFS data as an image.
     """
-    def __call__(self, data : bytes):
+
+    def __call__(self, data: bytes):
         """
         Parses IPFS image data.
 
@@ -63,14 +68,16 @@ class IPFSImageParser(IPFSParserBase):
         """
         return Image.open(io.BytesIO(data))
 
+
 class IPFSImageTensorParser(IPFSImageParser):
     """
     Parses IPFS as an image and converts to a tensor.
     """
+
     def __init__(self,
-                channel_first : bool = True,
-                dtype : torch.dtype = torch.float32,
-                device : Union[torch.device, str] = 'cpu'):
+                 channel_first: bool = True,
+                 dtype: torch.dtype = torch.float32,
+                 device: Union[torch.device, str] = 'cpu'):
         """
         Initializes IPFSImageTensorParser.
 
@@ -83,7 +90,7 @@ class IPFSImageTensorParser(IPFSImageParser):
         self._dtype = dtype
         self._device = device
 
-    def __call__(self, data : bytes):
+    def __call__(self, data: bytes):
         """
         Parses IPFS image data and converts to a tensor.
 
@@ -92,9 +99,10 @@ class IPFSImageTensorParser(IPFSImageParser):
         """
         image = super().__call__(data)
         np_array = np.asarray(image).copy()
-        torch_tensor = torch.from_numpy(np_array).to(dtype=self._dtype, device=self._device)
+        torch_tensor = torch.from_numpy(np_array).to(
+            dtype=self._dtype, device=self._device)
 
         if self._channel_first and len(torch_tensor.shape) >= 3:
             torch_tensor = torch.transpose(torch_tensor, 0, -1)
-        
+
         return torch_tensor

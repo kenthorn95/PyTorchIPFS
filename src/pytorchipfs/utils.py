@@ -7,9 +7,10 @@ from typing import Union
 
 import ipfshttpclient
 
-def _download_item(element_hash : str,
-                   ipfs_client : ipfshttpclient.Client,
-                   data_folder : Union[str, pathlib.Path]):
+
+def _download_item(element_hash: str,
+                   ipfs_client: ipfshttpclient.Client,
+                   data_folder: Union[str, pathlib.Path]):
     """
     Downloads a file from IPFS.
 

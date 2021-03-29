@@ -19,17 +19,19 @@ IPFS directory explorer? --> ls
 "explorer" provides utility functions
 """
 
+
 class IPFSDatasetBase(Dataset, ABC):
     """
     Abstract base class for IPFS datasets.
     """
+
     def __init__(self,
-        ipfs_client : ipfshttpclient.Client,
-        data_folder : Union[pathlib.Path, str],
-        hashes : Iterable[str],
-        transform : Optional[Callable[torch.Tensor, torch.Tensor]] = None,
-        eager_download : bool = True,
-        suppress_errors : bool = False):
+                 ipfs_client: ipfshttpclient.Client,
+                 data_folder: Union[pathlib.Path, str],
+                 hashes: Iterable[str],
+                 transform: Optional[Callable[torch.Tensor, torch.Tensor]] = None,
+                 eager_download: bool = True,
+                 suppress_errors: bool = False):
         """
         Initializes IPFSDatasetBase.
 
@@ -63,7 +65,7 @@ class IPFSDatasetBase(Dataset, ABC):
 
     @abstractmethod
     def _download_item(self,
-                       index : int):
+                       index: int):
         """
         Downloads a specific element with a given
         index.
@@ -73,7 +75,7 @@ class IPFSDatasetBase(Dataset, ABC):
         """
 
     def download_data(self,
-                      indices : Optional[Union[int, Iterable[int], slice]] = None):
+                      indices: Optional[Union[int, Iterable[int], slice]] = None):
         """
         Downloads one or more elements with given indices.
 
@@ -103,7 +105,7 @@ class IPFSDatasetBase(Dataset, ABC):
                         raise
 
     def __getitem__(self,
-                    indices : Union[int, Iterable[int], slice]):
+                    indices: Union[int, Iterable[int], slice]):
         """
         Returns one or more elements of the dataset.
 
@@ -122,7 +124,7 @@ class IPFSDatasetBase(Dataset, ABC):
             item = self._transform(item)
 
         return item
-    
+
     def __len__(self):
         if self._data is None:
             self.init_data()
@@ -134,14 +136,15 @@ class IPFSGeneralDataset(IPFSDatasetBase):
     """
     A general-purpose IPFS dataset.
     """
+
     def __init__(self,
-        ipfs_client : ipfshttpclient.Client,
-        data_folder : Union[pathlib.Path, str],
-        hashes : Iterable[str],
-        transform : Optional[Callable[torch.Tensor, torch.Tensor]] = None,
-        parser : Optional[Callable[Any, Any]] = None,
-        eager_download : bool = True,
-        suppress_errors : bool = False):
+                 ipfs_client: ipfshttpclient.Client,
+                 data_folder: Union[pathlib.Path, str],
+                 hashes: Iterable[str],
+                 transform: Optional[Callable[torch.Tensor, torch.Tensor]] = None,
+                 parser: Optional[Callable[Any, Any]] = None,
+                 eager_download: bool = True,
+                 suppress_errors: bool = False):
         """
         Initializes IPFSGeneralDataset.
 
@@ -159,7 +162,8 @@ class IPFSGeneralDataset(IPFSDatasetBase):
             suppress_errors (bool, optional): If True, errors during download will be ignored. Defaults
                 to False.
         """
-        super().__init__(ipfs_client, data_folder, hashes, transform=transform, eager_download=eager_download, suppress_errors=suppress_errors)
+        super().__init__(ipfs_client, data_folder, hashes, transform=transform,
+                         eager_download=eager_download, suppress_errors=suppress_errors)
         self._parser = parser
 
     def init_data(self):
@@ -170,7 +174,7 @@ class IPFSGeneralDataset(IPFSDatasetBase):
         if self._eager_download:
             self.download_data()
 
-    def _download_item(self, index : int):
+    def _download_item(self, index: int):
         """
         Downloads a specific element with a given
         index.
@@ -179,25 +183,28 @@ class IPFSGeneralDataset(IPFSDatasetBase):
             index (int): The index of the element to download
         """
         element_hash = self._hashes[index]
-        file_contents = _download_item(element_hash, self._ipfs_client, self._data_folder)
-        self._data[index] = file_contents if self._parser is None else self._parser(file_contents)
+        file_contents = _download_item(
+            element_hash, self._ipfs_client, self._data_folder)
+        self._data[index] = file_contents if self._parser is None else self._parser(
+            file_contents)
 
 
 class IPFSTensorDataset(IPFSGeneralDataset):
     """
     A general-purpose tensor dataset.
     """
+
     def __init__(self,
-        ipfs_client : ipfshttpclient.Client,
-        data_folder : Union[pathlib.Path, str],
-        element_shape : Optional[Iterable[int]],
-        hashes : Iterable[str],
-        transform : Optional[Callable[torch.Tensor, torch.Tensor]] = None,
-        parser : Optional[Callable[Any, Any]] = None,
-        dtype : torch.dtype = torch.float32,
-        device : Union[torch.device, str] = 'cpu',
-        eager_download : bool = True,
-        suppress_errors : bool = False):
+                 ipfs_client: ipfshttpclient.Client,
+                 data_folder: Union[pathlib.Path, str],
+                 element_shape: Optional[Iterable[int]],
+                 hashes: Iterable[str],
+                 transform: Optional[Callable[torch.Tensor, torch.Tensor]] = None,
+                 parser: Optional[Callable[Any, Any]] = None,
+                 dtype: torch.dtype = torch.float32,
+                 device: Union[torch.device, str] = 'cpu',
+                 eager_download: bool = True,
+                 suppress_errors: bool = False):
         """
         Initializes IPFSTensorDataset.
 
@@ -219,7 +226,8 @@ class IPFSTensorDataset(IPFSGeneralDataset):
             suppress_errors (bool, optional): If True, errors during download will be ignored. Defaults
                 to False.
         """
-        super().__init__(ipfs_client, data_folder, hashes, transform=transform, parser=parser, eager_download=eager_download, suppress_errors=suppress_errors)
+        super().__init__(ipfs_client, data_folder, hashes, transform=transform,
+                         parser=parser, eager_download=eager_download, suppress_errors=suppress_errors)
 
         self._element_shape = element_shape
         self._dtype = dtype
@@ -232,23 +240,26 @@ class IPFSTensorDataset(IPFSGeneralDataset):
         if self._element_shape is None:
             self._data = [None] * len(self._hashes)
         else:
-            self._data = torch.zeros((len(self._hashes),) + self._element_shape, dtype=self._dtype, device=self._device)
+            self._data = torch.zeros(
+                (len(self._hashes),) + self._element_shape, dtype=self._dtype, device=self._device)
+
 
 class IPFSImageTensorDataset(IPFSTensorDataset):
     """
     An image tensor dataset.
     """
+
     def __init__(self,
-        ipfs_client : ipfshttpclient.Client,
-        data_folder : Union[pathlib.Path, str],
-        image_shape : Optional[Iterable[int]],
-        hashes : Iterable[str],
-        transform : Optional[Callable[torch.Tensor, torch.Tensor]] = None,
-        channel_first: bool = True,
-        dtype : torch.dtype = torch.float32,
-        device : Union[torch.device, str] = 'cpu',
-        eager_download : bool = True,
-        suppress_errors : bool = False):
+                 ipfs_client: ipfshttpclient.Client,
+                 data_folder: Union[pathlib.Path, str],
+                 image_shape: Optional[Iterable[int]],
+                 hashes: Iterable[str],
+                 transform: Optional[Callable[torch.Tensor, torch.Tensor]] = None,
+                 channel_first: bool = True,
+                 dtype: torch.dtype = torch.float32,
+                 device: Union[torch.device, str] = 'cpu',
+                 eager_download: bool = True,
+                 suppress_errors: bool = False):
         """
         Initializes IPFSImageTensorDataset.
 
@@ -269,4 +280,5 @@ class IPFSImageTensorDataset(IPFSTensorDataset):
             suppress_errors (bool, optional): If True, errors during download will be ignored. Defaults
                 to False.
         """
-        super().__init__(ipfs_client, data_folder, image_shape, hashes, transform=transform, parser=IPFSImageTensorParser(channel_first=channel_first, dtype=dtype, device=device), dtype=dtype, device=device, eager_download=eager_download, suppress_errors=suppress_errors)
+        super().__init__(ipfs_client, data_folder, image_shape, hashes, transform=transform, parser=IPFSImageTensorParser(channel_first=channel_first,
+                                                                                                                          dtype=dtype, device=device), dtype=dtype, device=device, eager_download=eager_download, suppress_errors=suppress_errors)
