@@ -13,13 +13,6 @@ from torch.utils.data import Dataset
 from .parsers import IPFSImageTensorParser
 from .utils import _download_item
 
-"""
-Lazy loading vs eager loading vs background loading. Multiprocessing support?
-IPFS directory explorer? --> ls
-"explorer" provides utility functions
-"""
-
-
 class IPFSDatasetBase(Dataset, ABC):
     """
     Abstract base class for IPFS datasets.
