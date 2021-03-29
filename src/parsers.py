@@ -91,7 +91,7 @@ class IPFSImageTensorParser(IPFSImageParser):
             data (bytes): The IPFS image data.
         """
         image = super().__call__(data)
-        np_array = np.asarray(image)
+        np_array = np.asarray(image).copy()
         torch_tensor = torch.from_numpy(np_array).to(dtype=self._dtype, device=self._device)
 
         if self._channel_first and len(torch_tensor.shape) >= 3:
