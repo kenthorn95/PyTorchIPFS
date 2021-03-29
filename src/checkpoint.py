@@ -5,10 +5,13 @@ on IPFS.
 
 import io
 import logging
-from typing import Any
+import pathlib
+from typing import Any, Union
 
 import ipfshttpclient
 import torch
+
+from .utils import _download_item
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +64,7 @@ def store_checkpoint(ipfs_client : ipfshttpclient.Client, checkpoint : dict):
     checkpoint_hash = ipfs_client.add_bytes(serialized)
     return checkpoint_hash
 
-def get_checkpoint(ipfs_client : ipfshttpclient.Client, checkpoint_hash : str):
+def get_checkpoint(ipfs_client : ipfshttpclient.Client, checkpoint_hash : str, data_folder : Union[str, pathlib.Path]):
     """
     Retrieves a checkpoint from IPFS.
 
@@ -69,11 +72,13 @@ def get_checkpoint(ipfs_client : ipfshttpclient.Client, checkpoint_hash : str):
         ipfs_client (ipfshttpclient.Client): The client that will be used to
             retrieve the checkpoint.
         checkpoint_hash (str): Hash of the checkpoint.
+        data_folder (Union[str, pathlib.Path]): The directory where the checkpoint
+            will be downloaded.
 
     Returns:
         dict: The retrieved checkpoint.
     """
-    serialized = ipfs_client.get(checkpoint_hash)
+    serialized = _download_item(checkpoint_hash, ipfs_client, data_folder)
 
     return _deserialize(serialized)
 
@@ -83,6 +88,7 @@ class CheckpointBackup:
     """
     def __init__(self,
                 ipfs_client : ipfshttpclient.Client,
+                data_folder : Union[str, pathlib.Path],
                 verbose : bool = True):
         """
         Initializes CheckpointBackup.
@@ -90,10 +96,13 @@ class CheckpointBackup:
         Args:
             ipfs_client (ipfshttpclient.Client): The client that will be used to
                 manage checkpoints.
+            data_folder (Union[str, pathlib.Path]): The directory where the files
+                will be downloaded.
             verbose (bool, optional): If True, logs checkpoint storage at INFO level.
                 Defaults to True.
         """
         self._ipfs_client = ipfs_client
+        self._data_folder = data_folder
         self._verbose = verbose
         self.checkpoint_hashes = []
 
@@ -124,7 +133,7 @@ class CheckpointBackup:
         Returns:
             dict: The retrieved checkpoint.
         """
-        return get_checkpoint(self._ipfs_client, checkpoint_hash)
+        return get_checkpoint(self._ipfs_client, checkpoint_hash, self._data_folder)
 
     @property
     def latest_checkpoint(self):

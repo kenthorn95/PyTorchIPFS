@@ -10,7 +10,8 @@ import ipfshttpclient
 import torch
 from torch.utils.data import Dataset
 
-import parsers
+from .parsers import IPFSImageTensorParser
+from .utils import _download_item
 
 """
 Lazy loading vs eager loading vs background loading. Multiprocessing support?
@@ -24,7 +25,7 @@ class IPFSDatasetBase(Dataset, ABC):
     """
     def __init__(self,
         ipfs_client : ipfshttpclient.Client,
-        data_folder : Optional[Union[pathlib.Path, str]],
+        data_folder : Union[pathlib.Path, str],
         hashes : Iterable[str],
         eager_download : bool = True,
         suppress_errors : bool = False):
@@ -33,8 +34,8 @@ class IPFSDatasetBase(Dataset, ABC):
 
         Args:
             ipfs_client (ipfshttpclient.Client): An active IPFS client.
-            data_folder (Optional[Union[pathlib.Path, str]]): The path to the folder where the files
-                will be downloaded. If None, no files are written on secondary storage.
+            data_folder (Union[pathlib.Path, str]): The path to the folder where the files
+                will be downloaded.
             hashes (Iterable[str]): An iterable containing the hashes of the elements.
             eager_download (bool, optional): If True, elements are downloaded as soon as their hash is
                 obtained. Defaults to True.
@@ -49,9 +50,6 @@ class IPFSDatasetBase(Dataset, ABC):
 
         self._eager_download = eager_download
         self._suppress_errors = suppress_errors
-
-        if not self._data_folder.exists():
-            self._data_folder.mkdir()
 
     @abstractmethod
     def init_data(self):
@@ -133,8 +131,8 @@ class IPFSGeneralDataset(IPFSDatasetBase):
 
         Args:
             ipfs_client (ipfshttpclient.Client): An active IPFS client.
-            data_folder (Optional[Union[pathlib.Path, str]]): The path to the folder where the files
-                will be downloaded. If None, no files are written on secondary storage.
+            data_folder (Union[pathlib.Path, str]): The path to the folder where the files
+                will be downloaded.
             hashes (Iterable[str]): An iterable containing the hashes of the elements.
             parser (Optional[Callable[Any, Any]], optional): If not None, elements will be processed with this parser
                 before being stored in memory. Defaults to None.
@@ -163,17 +161,7 @@ class IPFSGeneralDataset(IPFSDatasetBase):
             index (int): The index of the element to download
         """
         element_hash = self._hashes[index]
-        element_path = self._data_folder / str(element_hash)
-
-        if self._data_folder is None:
-            # TODO: Download to memory
-            raise NotImplementedError
-        else:
-            if not element_path.exists():
-                self._ipfs_client.get(element_hash, target=self._data_folder)
-
-            with open(element_path, 'rb') as f:
-                file_contents = f.read()
+        file_contents = _download_item(element_hash, self._ipfs_client, self._data_folder)
         self._data[index] = file_contents if self._parser is None else self._parser(file_contents)
 
 
@@ -196,8 +184,8 @@ class IPFSTensorDataset(IPFSGeneralDataset):
 
         Args:
             ipfs_client (ipfshttpclient.Client): An active IPFS client.
-            data_folder (Optional[Union[pathlib.Path, str]]): The path to the folder where the files
-                will be downloaded. If None, no files are written on secondary storage.
+            data_folder (Union[pathlib.Path, str]): The path to the folder where the files
+                will be downloaded.
             element_shape (Iterable[int]): The shape of a tensor element.
             hashes (Iterable[str]): An iterable containing the hashes of the elements.
             parser (Optional[Callable[Any, Any]], optional): If not None, elements will be processed with this parser
@@ -240,8 +228,8 @@ class IPFSImageTensorDataset(IPFSTensorDataset):
 
         Args:
             ipfs_client (ipfshttpclient.Client): An active IPFS client.
-            data_folder (Optional[Union[pathlib.Path, str]]): The path to the folder where the files
-                will be downloaded. If None, no files are written on secondary storage.
+            data_folder (Union[pathlib.Path, str]): The path to the folder where the files
+                will be downloaded.
             image_shape (Iterable[int]): The shape of an image tensor.
             hashes (Iterable[str]): An iterable containing the hashes of the images.
             channel_first (bool) : If True, images will be stored in CHW format, else HWC. Defaults to True.
@@ -252,4 +240,4 @@ class IPFSImageTensorDataset(IPFSTensorDataset):
             suppress_errors (bool, optional): If True, errors during download will be ignored. Defaults
                 to False.
         """
-        super().__init__(ipfs_client, data_folder, image_shape, hashes, parser=parsers.IPFSImageTensorParser(channel_first=channel_first, dtype=dtype, device=device), dtype=dtype, device=device, eager_download=eager_download, suppress_errors=suppress_errors)
+        super().__init__(ipfs_client, data_folder, image_shape, hashes, parser=IPFSImageTensorParser(channel_first=channel_first, dtype=dtype, device=device), dtype=dtype, device=device, eager_download=eager_download, suppress_errors=suppress_errors)
