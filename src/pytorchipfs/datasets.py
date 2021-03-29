@@ -119,7 +119,6 @@ class IPFSDatasetBase(Dataset, ABC):
         item = self._data[indices]
 
         if self._transform is not None:
-            print('APPLYING')
             item = self._transform(item)
 
         return item
